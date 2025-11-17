@@ -9,10 +9,14 @@ set -e  # Exit on error
 PROJECT_ID="onboarding-tasks-automation"
 REGION="us-central1"
 RUNTIME="nodejs20"
+ALLOWED_DOMAIN="citylifestyle.com"
+CIRCLE_DOMAIN="https://citylifestyle.circle.so"
 
 echo "🚀 Deploying Circle Tasks Integration to Google Cloud..."
 echo "Project: $PROJECT_ID"
 echo "Region: $REGION"
+echo "Allowed Domain: $ALLOWED_DOMAIN"
+echo "Circle Domain: $CIRCLE_DOMAIN"
 echo ""
 
 # Check if service account key exists
@@ -49,7 +53,8 @@ deploy_function() {
         --allow-unauthenticated \
         --max-instances=10 \
         --timeout=60s \
-        --memory=256MB
+        --memory=256MB \
+        --set-env-vars="ALLOWED_DOMAIN=$ALLOWED_DOMAIN,CIRCLE_DOMAIN=$CIRCLE_DOMAIN"
 
     # Remove the copied key for security
     rm "$SOURCE_DIR/service-account-key.json"

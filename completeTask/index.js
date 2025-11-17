@@ -1,6 +1,10 @@
 const { google } = require('googleapis');
 const functions = require('@google-cloud/functions-framework');
 
+// Environment variables
+const ALLOWED_DOMAIN = process.env.ALLOWED_DOMAIN || 'citylifestyle.com';
+const CIRCLE_DOMAIN = process.env.CIRCLE_DOMAIN || 'https://citylifestyle.circle.so';
+
 /**
  * Google Cloud Function: completeTask
  * Marks a task as complete in Google Tasks API using service account with domain-wide delegation
@@ -14,7 +18,7 @@ const functions = require('@google-cloud/functions-framework');
  */
 functions.http('completeTask', async (req, res) => {
   // Set CORS headers - restrict to Circle.so domain
-  res.set('Access-Control-Allow-Origin', 'https://citylifestyle.circle.so');
+  res.set('Access-Control-Allow-Origin', CIRCLE_DOMAIN);
   res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.set('Access-Control-Allow-Headers', 'Content-Type');
 
@@ -40,9 +44,9 @@ functions.http('completeTask', async (req, res) => {
       return;
     }
 
-    // Validate domain - only allow citylifestyle.com emails
-    if (!userEmail.endsWith('@citylifestyle.com')) {
-      res.status(403).json({ error: 'Access denied. Only @citylifestyle.com emails are allowed.' });
+    // Validate domain - only allow authorized emails
+    if (!userEmail.endsWith(`@${ALLOWED_DOMAIN}`)) {
+      res.status(403).json({ error: `Access denied. Only @${ALLOWED_DOMAIN} emails are allowed.` });
       return;
     }
 
