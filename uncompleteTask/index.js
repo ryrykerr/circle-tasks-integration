@@ -13,8 +13,8 @@ const functions = require('@google-cloud/functions-framework');
  * }
  */
 functions.http('uncompleteTask', async (req, res) => {
-  // Set CORS headers
-  res.set('Access-Control-Allow-Origin', '*');
+  // Set CORS headers - restrict to Circle.so domain
+  res.set('Access-Control-Allow-Origin', 'https://citylifestyle.circle.so');
   res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.set('Access-Control-Allow-Headers', 'Content-Type');
 
@@ -37,6 +37,12 @@ functions.http('uncompleteTask', async (req, res) => {
       res.status(400).json({
         error: 'userEmail, taskListId, and taskId are required'
       });
+      return;
+    }
+
+    // Validate domain - only allow citylifestyle.com emails
+    if (!userEmail.endsWith('@citylifestyle.com')) {
+      res.status(403).json({ error: 'Access denied. Only @citylifestyle.com emails are allowed.' });
       return;
     }
 
