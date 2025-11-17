@@ -1,0 +1,13 @@
+{
+  "name": "complete-task",
+  "version": "1.0.0",
+  "description": "Google Cloud Function to mark a task as complete in Google Tasks API",
+  "main": "index.js",
+  "engines": {
+    "node": "20"
+  },
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.3.0",
+    "googleapis": "^128.0.0"
+  }
+}

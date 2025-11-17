@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Tasks</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 24px;
+            font-size: 28px;
+        }
+
+        .task-list {
+            list-style: none;
+        }
+
+        .task-item {
+            padding: 16px;
+            border-bottom: 1px solid #e1e4e8;
+            display: flex;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .task-item:hover {
+            background: #f6f8fa;
+        }
+
+        .task-item:last-child {
+            border-bottom: none;
+        }
+
+        .task-checkbox {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            cursor: pointer;
+        }
+
+        .task-title {
+            flex: 1;
+            color: #24292e;
+            font-size: 16px;
+        }
+
+        .task-item.completed .task-title {
+            text-decoration: line-through;
+            color: #6a737d;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6a737d;
+        }
+
+        .error {
+            background: #fff5f5;
+            border: 1px solid #fc8181;
+            color: #c53030;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>My Tasks</h1>
+        <div id="error-message" class="error" style="display: none;"></div>
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading tasks...</p>
+        </div>
+        <ul id="task-list" class="task-list"></ul>
+    </div>
+
+    <script>
+        // Configuration - UPDATE THESE URLs after deployment
+        const API_BASE_URL = 'https://us-central1-onboarding-tasks-automation.cloudfunctions.net';
+        const USER_EMAIL = 'user@citylifestyle.com'; // Update with actual user email
+
+        let taskListId = null;
+
+        // Fetch and display tasks
+        async function loadTasks() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/getTasks`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userEmail: USER_EMAIL
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                taskListId = data.taskListId;
+
+                displayTasks(data.tasks);
+
+            } catch (error) {
+                showError('Failed to load tasks: ' + error.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        // Display tasks in the UI
+        function displayTasks(tasks) {
+            const taskList = document.getElementById('task-list');
+            taskList.innerHTML = '';
+
+            if (!tasks || tasks.length === 0) {
+                taskList.innerHTML = '<li class="task-item">No tasks found</li>';
+                return;
+            }
+
+            tasks.forEach(task => {
+                const li = document.createElement('li');
+                li.className = 'task-item';
+                if (task.status === 'completed') {
+                    li.classList.add('completed');
+                }
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'task-checkbox';
+                checkbox.checked = task.status === 'completed';
+                checkbox.addEventListener('change', () => toggleTask(task.id, checkbox.checked));
+
+                const title = document.createElement('span');
+                title.className = 'task-title';
+                title.textContent = task.title;
+
+                li.appendChild(checkbox);
+                li.appendChild(title);
+                taskList.appendChild(li);
+            });
+        }
+
+        // Toggle task completion status
+        async function toggleTask(taskId, isCompleted) {
+            const endpoint = isCompleted ? 'completeTask' : 'uncompleteTask';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userEmail: USER_EMAIL,
+                        taskListId: taskListId,
+                        taskId: taskId
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                // Reload tasks to reflect changes
+                await loadTasks();
+
+            } catch (error) {
+                showError('Failed to update task: ' + error.message);
+                // Reload tasks to revert UI state
+                await loadTasks();
+            }
+        }
+
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Load tasks on page load
+        loadTasks();
+    </script>
+</body>
+</html>
