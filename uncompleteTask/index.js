@@ -62,12 +62,18 @@ functions.http('uncompleteTask', async (req, res) => {
     const authClient = await auth.getClient();
     const tasks = google.tasks({ version: 'v1', auth: authClient });
 
-    // Mark as incomplete (needsAction)
+    // Get the current task to preserve all fields
+    const currentTask = await tasks.tasks.get({
+      tasklist: taskListId,
+      task: taskId
+    });
+
+    // Mark as incomplete (needsAction) - preserve all existing fields
     const updatedTask = await tasks.tasks.update({
       tasklist: taskListId,
       task: taskId,
       requestBody: {
-        id: taskId,
+        ...currentTask.data,
         status: 'needsAction',
         completed: null // Remove completion timestamp
       }

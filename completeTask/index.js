@@ -62,18 +62,18 @@ functions.http('completeTask', async (req, res) => {
     const authClient = await auth.getClient();
     const tasks = google.tasks({ version: 'v1', auth: authClient });
 
-    // Get the current task
-    const task = await tasks.tasks.get({
+    // Get the current task to preserve all fields
+    const currentTask = await tasks.tasks.get({
       tasklist: taskListId,
       task: taskId
     });
 
-    // Mark as completed
+    // Mark as completed - preserve all existing fields
     const updatedTask = await tasks.tasks.update({
       tasklist: taskListId,
       task: taskId,
       requestBody: {
-        id: taskId,
+        ...currentTask.data,
         status: 'completed'
       }
     });
