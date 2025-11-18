@@ -113,22 +113,41 @@
     </div>
 
     <script>
-        // Configuration - UPDATE THESE URLs after deployment
+        // Configuration
         const API_BASE_URL = 'https://us-central1-onboarding-tasks-automation.cloudfunctions.net';
-        const USER_EMAIL = 'user@citylifestyle.com'; // Update with actual user email
 
         let taskListId = null;
+        let userEmail = null;
+
+        // Get user email from Circle.so
+        function getUserEmail() {
+            // Check if window.circleUser exists and has email
+            if (window.circleUser && window.circleUser.email) {
+                return window.circleUser.email;
+            }
+
+            // Fallback: wait for Circle.so to load user data
+            return null;
+        }
 
         // Fetch and display tasks
         async function loadTasks() {
             try {
+                // Get current user's email from Circle.so
+                userEmail = getUserEmail();
+
+                if (!userEmail) {
+                    showError('Unable to detect your email. Please make sure you are logged in.');
+                    return;
+                }
+
                 const response = await fetch(`${API_BASE_URL}/getTasks`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        userEmail: USER_EMAIL
+                        userEmail: userEmail
                     })
                 });
 
@@ -192,7 +211,7 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        userEmail: USER_EMAIL,
+                        userEmail: userEmail,
                         taskListId: taskListId,
                         taskId: taskId
                     })
@@ -223,8 +242,33 @@
             }, 5000);
         }
 
-        // Load tasks on page load
-        loadTasks();
+        // Wait for Circle.so to load user data, then load tasks
+        function initializeTasks() {
+            const userEmail = getUserEmail();
+
+            if (userEmail) {
+                // User data is ready, load tasks
+                loadTasks();
+            } else {
+                // Wait a bit for Circle.so to populate window.circleUser
+                setTimeout(() => {
+                    const retryEmail = getUserEmail();
+                    if (retryEmail) {
+                        loadTasks();
+                    } else {
+                        showError('Unable to detect your email. Please refresh the page.');
+                        document.getElementById('loading').style.display = 'none';
+                    }
+                }, 1000);
+            }
+        }
+
+        // Initialize when page loads
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeTasks);
+        } else {
+            initializeTasks();
+        }
     </script>
 </body>
 </html>
