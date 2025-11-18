@@ -1,274 +1,1063 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Tasks</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #f5f7fa;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            padding: 30px;
-        }
-
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 24px;
-            font-size: 28px;
-        }
-
-        .task-list {
-            list-style: none;
-        }
-
-        .task-item {
-            padding: 16px;
-            border-bottom: 1px solid #e1e4e8;
-            display: flex;
-            align-items: center;
-            transition: background 0.2s;
-        }
-
-        .task-item:hover {
-            background: #f6f8fa;
-        }
-
-        .task-item:last-child {
-            border-bottom: none;
-        }
-
-        .task-checkbox {
-            width: 20px;
-            height: 20px;
-            margin-right: 12px;
-            cursor: pointer;
-        }
-
-        .task-title {
-            flex: 1;
-            color: #24292e;
-            font-size: 16px;
-        }
-
-        .task-item.completed .task-title {
-            text-decoration: line-through;
-            color: #6a737d;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #6a737d;
-        }
-
-        .error {
-            background: #fff5f5;
-            border: 1px solid #fc8181;
-            color: #c53030;
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #3498db;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Onboarding Tasks</title>
 </head>
-<body>
-    <div class="container">
-        <h1>My Tasks</h1>
-        <div id="error-message" class="error" style="display: none;"></div>
-        <div id="loading" class="loading">
-            <div class="spinner"></div>
-            <p>Loading tasks...</p>
-        </div>
-        <ul id="task-list" class="task-list"></ul>
+
+<style>
+  /* ============================================
+     CONFIGURATION - Styled with City Lifestyle brand
+     ============================================ */
+  :root {
+    --primary-color: #667eea;
+    --primary-dark: #5568d3;
+    --success-color: #10b981;
+    --error-color: #ef4444;
+    --warning-color: #f59e0b;
+  }
+
+  /* ============================================
+     BASE STYLES
+     ============================================ */
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    background: #f5f7fa;
+  }
+
+  .task-dashboard {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  /* ============================================
+     PROGRESS SECTION
+     ============================================ */
+  .progress-section {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #764ba2 100%);
+    color: white;
+    padding: 40px 30px;
+    border-radius: 16px;
+    margin-bottom: 30px;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+  }
+
+  .progress-section h1 {
+    margin: 0 0 10px 0;
+    font-size: 32px;
+    font-weight: 700;
+  }
+
+  .progress-section .subtitle {
+    margin: 0 0 25px 0;
+    opacity: 0.9;
+    font-size: 16px;
+  }
+
+  .progress-bar-container {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    height: 48px;
+    overflow: hidden;
+    margin: 25px 0;
+    position: relative;
+  }
+
+  .progress-bar-fill {
+    background: white;
+    height: 100%;
+    border-radius: 12px;
+    transition: width 1s cubic-bezier(0.65, 0, 0.35, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--primary-color);
+    min-width: 80px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    margin-top: 25px;
+  }
+
+  .stat-card {
+    background: rgba(255, 255, 255, 0.15);
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .stat-number {
+    font-size: 40px;
+    font-weight: 700;
+    display: block;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .stat-label {
+    font-size: 14px;
+    opacity: 0.95;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+
+  /* ============================================
+     SECTION HEADERS
+     ============================================ */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 35px 0 20px 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1f2937;
+  }
+
+  .section-header.completed-section {
+    opacity: 0.7;
+  }
+
+  /* ============================================
+     TASK CARDS
+     ============================================ */
+  .tasks-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .task-card {
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 24px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .task-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--primary-color);
+    transform: scaleY(0);
+    transition: transform 0.3s ease;
+  }
+
+  .task-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+    transform: translateY(-2px);
+  }
+
+  .task-card:hover::before {
+    transform: scaleY(1);
+  }
+
+  .task-card.completed {
+    opacity: 0.65;
+    background: #f9fafb;
+    border-color: #d1d5db;
+  }
+
+  .task-card.completed::before {
+    background: var(--success-color);
+  }
+
+  .task-card.completed:hover {
+    opacity: 0.85;
+    border-color: var(--success-color);
+  }
+
+  .task-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+
+  .task-checkbox {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border-radius: 50%;
+    border: 3px solid var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+    color: white;
+  }
+
+  .task-checkbox:hover {
+    transform: scale(1.15);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+
+  .task-checkbox.completed {
+    background: var(--success-color);
+    border-color: var(--success-color);
+  }
+
+  .task-checkbox.loading {
+    border-color: #9ca3af;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    100% { transform: rotate(360deg); }
+  }
+
+  .task-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+    flex: 1;
+    line-height: 1.4;
+  }
+
+  .task-card.completed .task-title {
+    text-decoration: line-through;
+    color: #6b7280;
+  }
+
+  .task-description {
+    color: #6b7280;
+    margin: 0 0 0 52px;
+    line-height: 1.6;
+    font-size: 15px;
+  }
+
+  .task-meta {
+    display: flex;
+    gap: 16px;
+    font-size: 14px;
+    color: #9ca3af;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: 16px 0 0 52px;
+  }
+
+  .due-date {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .overdue-badge {
+    background: var(--error-color);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .completed-badge {
+    color: var(--success-color);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* ============================================
+     LOADING STATE
+     ============================================ */
+  .loading-container {
+    text-align: center;
+    padding: 80px 20px;
+    color: #6b7280;
+  }
+
+  .loading-spinner {
+    font-size: 64px;
+    margin-bottom: 20px;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* ============================================
+     ERROR STATE
+     ============================================ */
+  .error-container {
+    background: #fee2e2;
+    border: 2px solid var(--error-color);
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    color: #991b1b;
+  }
+
+  .error-container h3 {
+    margin: 0 0 12px 0;
+    font-size: 24px;
+  }
+
+  .error-container p {
+    margin: 0 0 20px 0;
+  }
+
+  .error-container button {
+    background: var(--error-color);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .error-container button:hover {
+    background: #dc2626;
+  }
+
+  /* ============================================
+     EMPTY STATE
+     ============================================ */
+  .empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: #6b7280;
+  }
+
+  .empty-state-icon {
+    font-size: 80px;
+    margin-bottom: 20px;
+  }
+
+  .empty-state h2 {
+    font-size: 28px;
+    margin: 0 0 12px 0;
+    color: #1f2937;
+  }
+
+  .empty-state p {
+    font-size: 16px;
+    margin: 0;
+  }
+
+  /* ============================================
+     REFRESH BUTTON
+     ============================================ */
+  .refresh-button {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 64px;
+    height: 64px;
+    font-size: 28px;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    transition: all 0.3s ease;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .refresh-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 12px 32px rgba(102, 126, 234, 0.5);
+  }
+
+  .refresh-button.spinning {
+    animation: spin 1s linear infinite;
+  }
+
+  /* ============================================
+     CELEBRATION MODAL
+     ============================================ */
+  .celebration-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .celebration {
+    background: white;
+    padding: 50px;
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    animation: celebrationPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  @keyframes celebrationPop {
+    0% {
+      transform: scale(0);
+      opacity: 0;
+    }
+    50% {
+      transform: scale(1.1);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  .celebration-icon {
+    font-size: 80px;
+    margin-bottom: 20px;
+  }
+
+  .celebration h2 {
+    margin: 0 0 10px 0;
+    font-size: 32px;
+    color: #1f2937;
+  }
+
+  .celebration p {
+    margin: 0;
+    font-size: 18px;
+    color: #6b7280;
+  }
+
+  /* ============================================
+     MOBILE RESPONSIVE
+     ============================================ */
+  @media (max-width: 640px) {
+    .task-dashboard {
+      padding: 12px;
+    }
+
+    .progress-section {
+      padding: 30px 20px;
+    }
+
+    .progress-section h1 {
+      font-size: 24px;
+    }
+
+    .stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .stat-card {
+      padding: 16px 12px;
+    }
+
+    .stat-number {
+      font-size: 32px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+    }
+
+    .section-header {
+      font-size: 20px;
+    }
+
+    .task-card {
+      padding: 16px;
+    }
+
+    .task-header {
+      gap: 12px;
+    }
+
+    .task-checkbox {
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      font-size: 18px;
+    }
+
+    .task-title {
+      font-size: 16px;
+    }
+
+    .task-description,
+    .task-meta {
+      margin-left: 44px;
+      font-size: 14px;
+    }
+
+    .refresh-button {
+      width: 56px;
+      height: 56px;
+      font-size: 24px;
+      bottom: 20px;
+      right: 20px;
+    }
+
+    .celebration {
+      padding: 40px 30px;
+      margin: 20px;
+    }
+
+    .celebration h2 {
+      font-size: 24px;
+    }
+  }
+</style>
+
+<div class="task-dashboard">
+  <div id="dashboard-content">
+    <div class="loading-container">
+      <div class="loading-spinner">⏳</div>
+      <h3>Loading your onboarding tasks...</h3>
+      <p>Connecting to Google Tasks API</p>
     </div>
+  </div>
+</div>
 
-    <script>
-        // Configuration
-        const API_BASE_URL = 'https://us-central1-onboarding-tasks-automation.cloudfunctions.net';
+<button id="refresh-button" class="refresh-button" onclick="refreshTasks()" title="Refresh tasks" aria-label="Refresh tasks">
+  🔄
+</button>
 
-        let taskListId = null;
-        let userEmail = null;
+<script>
+  // ============================================
+  // CONFIGURATION
+  // ============================================
+  const CONFIG = {
+    // Cloud Function URLs (deployed to Google Cloud)
+    getTasks: 'https://us-central1-onboarding-tasks-automation.cloudfunctions.net/getTasks',
+    completeTask: 'https://us-central1-onboarding-tasks-automation.cloudfunctions.net/completeTask',
+    uncompleteTask: 'https://us-central1-onboarding-tasks-automation.cloudfunctions.net/uncompleteTask',
 
-        // Get user email from Circle.so
-        function getUserEmail() {
-            // Check if window.circleUser exists and has email
-            if (window.circleUser && window.circleUser.email) {
-                return window.circleUser.email;
-            }
+    // Allowed email domain
+    allowedDomain: 'citylifestyle.com'
+  };
 
-            // Fallback: wait for Circle.so to load user data
-            return null;
+  // ============================================
+  // GLOBAL STATE
+  // ============================================
+  let currentUser = null;
+  let currentTaskListId = null;
+  let currentTasks = [];
+
+  // ============================================
+  // USER DETECTION (Circle.so)
+  // ============================================
+
+  function getCurrentCircleUser() {
+    console.log('🔍 Detecting Circle user...');
+
+    // Check window.circleUser (CONFIRMED WORKING)
+    if (window.circleUser && window.circleUser.email) {
+      console.log('✅ User detected via window.circleUser');
+      return {
+        email: window.circleUser.email,
+        name: window.circleUser.name || window.circleUser.email.split('@')[0]
+      };
+    }
+
+    console.error('❌ Could not detect Circle user');
+    return null;
+  }
+
+  function validateUserDomain(user) {
+    if (!user || !user.email) return false;
+    const emailDomain = user.email.split('@')[1];
+    return emailDomain === CONFIG.allowedDomain;
+  }
+
+  // ============================================
+  // API CALLS TO GOOGLE CLOUD FUNCTIONS
+  // ============================================
+
+  async function fetchTasks(userEmail) {
+    console.log('📡 Fetching tasks for:', userEmail);
+
+    const response = await fetch(CONFIG.getTasks, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userEmail })
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || error.message || `HTTP ${response.status}`);
+    }
+
+    return await response.json();
+  }
+
+  async function toggleTaskCompletion(taskId, currentlyCompleted) {
+    if (!currentUser || !currentTaskListId) {
+      throw new Error('No user or task list');
+    }
+
+    const endpoint = currentlyCompleted ? CONFIG.uncompleteTask : CONFIG.completeTask;
+
+    console.log(`${currentlyCompleted ? 'Reopening' : 'Completing'} task:`, taskId);
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userEmail: currentUser.email,
+        taskListId: currentTaskListId,
+        taskId: taskId
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || error.message || 'Failed to update task');
+    }
+
+    return await response.json();
+  }
+
+  // ============================================
+  // DATA TRANSFORMATION
+  // ============================================
+
+  function transformGoogleTask(task) {
+    const isCompleted = task.status === 'completed';
+    const dueDate = task.due ? new Date(task.due) : null;
+    const completedDate = task.completed ? new Date(task.completed) : null;
+    const now = new Date();
+
+    // Calculate days overdue
+    let daysOverdue = 0;
+    if (dueDate && !isCompleted) {
+      const diffTime = now - dueDate;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      daysOverdue = diffDays > 0 ? diffDays : 0;
+    }
+
+    return {
+      id: task.id,
+      title: task.title || 'Untitled Task',
+      description: task.notes || '',
+      isCompleted,
+      dueDate: dueDate ? dueDate.toISOString() : null,
+      completedDate: completedDate ? completedDate.toISOString() : null,
+      daysOverdue
+    };
+  }
+
+  function calculateStats(tasks) {
+    const total = tasks.length;
+    const completed = tasks.filter(t => t.isCompleted).length;
+    const incomplete = total - completed;
+    const overdue = tasks.filter(t => t.daysOverdue > 0 && !t.isCompleted).length;
+    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+    return {
+      totalTasks: total,
+      completedTasks: completed,
+      incompleteTasks: incomplete,
+      overdueTasks: overdue,
+      completionPercentage: percentage
+    };
+  }
+
+  // ============================================
+  // UI RENDERING
+  // ============================================
+
+  function renderProgress(stats, userName) {
+    return `
+      <div class="progress-section">
+        <h1>Welcome back, ${escapeHtml(userName)}! 👋</h1>
+        <p class="subtitle">Your tasks sync across Circle, Gmail, and Google Calendar</p>
+
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" style="width: ${stats.completionPercentage}%;">
+            ${stats.completionPercentage}%
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-number">${stats.completedTasks}</span>
+            <span class="stat-label">Completed</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-number">${stats.incompleteTasks}</span>
+            <span class="stat-label">Remaining</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-number">${stats.overdueTasks}</span>
+            <span class="stat-label">Overdue</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-number">${stats.totalTasks}</span>
+            <span class="stat-label">Total</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderTask(task) {
+    const dueDate = task.dueDate
+      ? new Date(task.dueDate).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        })
+      : 'No due date';
+
+    const isOverdue = task.daysOverdue > 0;
+
+    return `
+      <div class="task-card ${task.isCompleted ? 'completed' : ''}"
+           data-task-id="${task.id}"
+           onclick="handleTaskClick('${task.id}', ${task.isCompleted})">
+        <div class="task-header">
+          <div class="task-checkbox ${task.isCompleted ? 'completed' : ''}"
+               title="${task.isCompleted ? 'Click to mark incomplete' : 'Click to mark complete'}">
+            ${task.isCompleted ? '✓' : ''}
+          </div>
+          <h3 class="task-title">${escapeHtml(task.title)}</h3>
+        </div>
+
+        ${task.description ? `
+          <div class="task-description">${escapeHtml(task.description)}</div>
+        ` : ''}
+
+        <div class="task-meta">
+          <span class="due-date">
+            📅 ${dueDate}
+          </span>
+          ${isOverdue && !task.isCompleted ? `
+            <span class="overdue-badge">
+              ⚠️ ${task.daysOverdue} ${task.daysOverdue === 1 ? 'day' : 'days'} overdue
+            </span>
+          ` : ''}
+          ${task.isCompleted && task.completedDate ? `
+            <span class="completed-badge">
+              ✓ Completed ${new Date(task.completedDate).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+              })}
+            </span>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderEmptyState() {
+    return `
+      <div class="empty-state">
+        <div class="empty-state-icon">🎉</div>
+        <h2>All Done!</h2>
+        <p>You've completed all your onboarding tasks. Excellent work!</p>
+      </div>
+    `;
+  }
+
+  function renderError(message) {
+    return `
+      <div class="error-container">
+        <h3>⚠️ Error Loading Tasks</h3>
+        <p>${escapeHtml(message)}</p>
+        <button onclick="loadDashboard()">Try Again</button>
+      </div>
+    `;
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // ============================================
+  // TASK INTERACTION
+  // ============================================
+
+  async function handleTaskClick(taskId, currentlyCompleted) {
+    console.log('Task clicked:', taskId);
+
+    const taskCard = document.querySelector(`[data-task-id="${taskId}"]`);
+    const checkbox = taskCard?.querySelector('.task-checkbox');
+
+    if (!checkbox) return;
+
+    // Show loading state
+    checkbox.classList.add('loading');
+    checkbox.innerHTML = '';
+
+    try {
+      // Toggle completion
+      await toggleTaskCompletion(taskId, currentlyCompleted);
+
+      // Show celebration if completing (not uncompleting)
+      if (!currentlyCompleted) {
+        showCelebration();
+      }
+
+      // Reload tasks to show updated state
+      await loadDashboard();
+
+    } catch (error) {
+      console.error('Error toggling task:', error);
+
+      // Remove loading state
+      checkbox.classList.remove('loading');
+      checkbox.innerHTML = currentlyCompleted ? '✓' : '';
+
+      // Show error
+      alert(`Failed to update task: ${error.message}`);
+    }
+  }
+
+  // ============================================
+  // CELEBRATION ANIMATION
+  // ============================================
+
+  function showCelebration() {
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'celebration-overlay';
+    overlay.innerHTML = `
+      <div class="celebration">
+        <div class="celebration-icon">🎉</div>
+        <h2>Great Job!</h2>
+        <p>Task completed successfully!</p>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    // Create confetti
+    createConfetti();
+
+    // Remove after 2.5 seconds
+    setTimeout(() => {
+      overlay.style.animation = 'fadeIn 0.3s ease reverse';
+      setTimeout(() => overlay.remove(), 300);
+    }, 2500);
+
+    // Click overlay to close early
+    overlay.addEventListener('click', () => {
+      overlay.style.animation = 'fadeIn 0.3s ease reverse';
+      setTimeout(() => overlay.remove(), 300);
+    });
+  }
+
+  function createConfetti() {
+    const colors = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe', '#43e97b', '#10b981'];
+    const confettiCount = 60;
+
+    for (let i = 0; i < confettiCount; i++) {
+      const confetti = document.createElement('div');
+      confetti.style.position = 'fixed';
+      confetti.style.width = '10px';
+      confetti.style.height = '10px';
+      confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      confetti.style.left = Math.random() * 100 + 'vw';
+      confetti.style.top = '-20px';
+      confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+      confetti.style.pointerEvents = 'none';
+      confetti.style.zIndex = '9999';
+      document.body.appendChild(confetti);
+
+      const duration = Math.random() * 3 + 2;
+      const angle = Math.random() * 720 - 360;
+      const drift = (Math.random() - 0.5) * 200;
+
+      confetti.animate([
+        {
+          transform: 'translateY(0) rotate(0deg) translateX(0)',
+          opacity: 1
+        },
+        {
+          transform: `translateY(100vh) rotate(${angle}deg) translateX(${drift}px)`,
+          opacity: 0
+        }
+      ], {
+        duration: duration * 1000,
+        easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+      });
+
+      setTimeout(() => confetti.remove(), duration * 1000);
+    }
+  }
+
+  // ============================================
+  // MAIN LOAD FUNCTION
+  // ============================================
+
+  async function loadDashboard() {
+    const container = document.getElementById('dashboard-content');
+
+    try {
+      // Show loading state
+      container.innerHTML = `
+        <div class="loading-container">
+          <div class="loading-spinner">⏳</div>
+          <h3>Loading your onboarding tasks...</h3>
+          <p>Connecting to Google Tasks API</p>
+        </div>
+      `;
+
+      // Get current user
+      if (!currentUser) {
+        currentUser = getCurrentCircleUser();
+
+        if (!currentUser) {
+          throw new Error('Could not detect user. Please make sure you are logged in to Circle.');
         }
 
-        // Fetch and display tasks
-        async function loadTasks() {
-            try {
-                // Get current user's email from Circle.so
-                userEmail = getUserEmail();
+        if (!validateUserDomain(currentUser)) {
+          throw new Error(`Invalid email domain. Please use your ${CONFIG.allowedDomain} email address.`);
+        }
+      }
 
-                if (!userEmail) {
-                    showError('Unable to detect your email. Please make sure you are logged in.');
-                    return;
-                }
+      console.log('User detected:', currentUser.email);
 
-                const response = await fetch(`${API_BASE_URL}/getTasks`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        userEmail: userEmail
-                    })
-                });
+      // Fetch tasks from Google Cloud Function
+      const response = await fetchTasks(currentUser.email);
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to fetch tasks');
+      }
 
-                const data = await response.json();
-                taskListId = data.taskListId;
+      // Store task list ID for later use
+      currentTaskListId = response.taskListId;
 
-                displayTasks(data.tasks);
+      // Transform Google Tasks to our format
+      const googleTasks = response.tasks || [];
+      currentTasks = googleTasks.map(transformGoogleTask);
 
-            } catch (error) {
-                showError('Failed to load tasks: ' + error.message);
-            } finally {
-                document.getElementById('loading').style.display = 'none';
-            }
+      console.log('Tasks loaded:', currentTasks.length);
+
+      // Calculate stats
+      const stats = calculateStats(currentTasks);
+
+      // Render dashboard
+      let html = renderProgress(stats, currentUser.name);
+
+      if (currentTasks.length > 0) {
+        const incompleteTasks = currentTasks.filter(t => !t.isCompleted);
+        const completedTasks = currentTasks.filter(t => t.isCompleted);
+
+        html += '<div class="tasks-container">';
+
+        if (incompleteTasks.length > 0) {
+          html += '<div class="section-header">📋 Your Tasks</div>';
+          incompleteTasks.forEach(task => {
+            html += renderTask(task);
+          });
         }
 
-        // Display tasks in the UI
-        function displayTasks(tasks) {
-            const taskList = document.getElementById('task-list');
-            taskList.innerHTML = '';
-
-            if (!tasks || tasks.length === 0) {
-                taskList.innerHTML = '<li class="task-item">No tasks found</li>';
-                return;
-            }
-
-            tasks.forEach(task => {
-                const li = document.createElement('li');
-                li.className = 'task-item';
-                if (task.status === 'completed') {
-                    li.classList.add('completed');
-                }
-
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.className = 'task-checkbox';
-                checkbox.checked = task.status === 'completed';
-                checkbox.addEventListener('change', () => toggleTask(task.id, checkbox.checked));
-
-                const title = document.createElement('span');
-                title.className = 'task-title';
-                title.textContent = task.title;
-
-                li.appendChild(checkbox);
-                li.appendChild(title);
-                taskList.appendChild(li);
-            });
+        if (completedTasks.length > 0) {
+          html += '<div class="section-header completed-section">✓ Completed</div>';
+          completedTasks.forEach(task => {
+            html += renderTask(task);
+          });
         }
 
-        // Toggle task completion status
-        async function toggleTask(taskId, isCompleted) {
-            const endpoint = isCompleted ? 'completeTask' : 'uncompleteTask';
+        html += '</div>';
+      } else {
+        html += renderEmptyState();
+      }
 
-            try {
-                const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        userEmail: userEmail,
-                        taskListId: taskListId,
-                        taskId: taskId
-                    })
-                });
+      container.innerHTML = html;
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+    } catch (error) {
+      console.error('Error loading dashboard:', error);
+      container.innerHTML = renderError(error.message);
+    }
+  }
 
-                // Reload tasks to reflect changes
-                await loadTasks();
+  // ============================================
+  // REFRESH FUNCTION
+  // ============================================
 
-            } catch (error) {
-                showError('Failed to update task: ' + error.message);
-                // Reload tasks to revert UI state
-                await loadTasks();
-            }
-        }
+  async function refreshTasks() {
+    const button = document.getElementById('refresh-button');
+    button.classList.add('spinning');
 
-        // Show error message
-        function showError(message) {
-            const errorDiv = document.getElementById('error-message');
-            errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
+    try {
+      await loadDashboard();
+    } finally {
+      setTimeout(() => button.classList.remove('spinning'), 1000);
+    }
+  }
 
-            setTimeout(() => {
-                errorDiv.style.display = 'none';
-            }, 5000);
-        }
+  // ============================================
+  // INITIALIZE
+  // ============================================
 
-        // Wait for Circle.so to load user data, then load tasks
-        function initializeTasks() {
-            const userEmail = getUserEmail();
+  // Wait for Circle.so to load user data, then load tasks
+  function initializeTasks() {
+    const user = getCurrentCircleUser();
 
-            if (userEmail) {
-                // User data is ready, load tasks
-                loadTasks();
-            } else {
-                // Wait a bit for Circle.so to populate window.circleUser
-                setTimeout(() => {
-                    const retryEmail = getUserEmail();
-                    if (retryEmail) {
-                        loadTasks();
-                    } else {
-                        showError('Unable to detect your email. Please refresh the page.');
-                        document.getElementById('loading').style.display = 'none';
-                    }
-                }, 1000);
-            }
-        }
-
-        // Initialize when page loads
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initializeTasks);
+    if (user) {
+      loadDashboard();
+    } else {
+      // Wait for Circle.so to populate window.circleUser
+      setTimeout(() => {
+        const retryUser = getCurrentCircleUser();
+        if (retryUser) {
+          loadDashboard();
         } else {
-            initializeTasks();
+          document.getElementById('dashboard-content').innerHTML =
+            renderError('Unable to detect your email. Please refresh the page.');
         }
-    </script>
-</body>
+      }, 1000);
+    }
+  }
+
+  // Initialize when page loads
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeTasks);
+  } else {
+    initializeTasks();
+  }
+</script>
 </html>
