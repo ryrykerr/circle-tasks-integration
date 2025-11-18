@@ -10,7 +10,7 @@ PROJECT_ID="onboarding-tasks-automation"
 REGION="us-central1"
 RUNTIME="nodejs20"
 ALLOWED_DOMAIN="citylifestyle.com"
-CIRCLE_DOMAIN="https://citylifestyle.circle.so"
+CIRCLE_DOMAIN="https://communities.citylifestyle.com"
 
 echo "🚀 Deploying Circle Tasks Integration to Google Cloud..."
 echo "Project: $PROJECT_ID"
