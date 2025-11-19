@@ -845,15 +845,10 @@
     // Update stats optimistically (instant feedback)
     updateStatsOptimistically(taskId, !wasCompleted);
 
-    // Move task to correct section optimistically
-    setTimeout(() => {
-      moveTaskToCorrectSection(taskCard, !wasCompleted);
-    }, 300); // Small delay for smooth animation
-
     try {
       // Toggle completion in background (no await, non-blocking)
       toggleTaskCompletion(taskId, currentlyCompleted).then(() => {
-        // Silent background refresh (no loading screen)
+        // Silent background refresh will move task to correct section
         silentRefresh();
       });
 
@@ -945,6 +940,33 @@
     }, 200);
   }
 
+  // Re-render just the tasks section (no loading screen)
+  function renderTasksOnly() {
+    const container = document.querySelector('.tasks-container');
+    if (!container) return;
+
+    const incompleteTasks = currentTasks.filter(t => !t.isCompleted);
+    const completedTasks = currentTasks.filter(t => t.isCompleted);
+
+    let html = '';
+
+    if (incompleteTasks.length > 0) {
+      html += '<div class="section-header">📋 Your Tasks</div>';
+      incompleteTasks.forEach(task => {
+        html += renderTask(task);
+      });
+    }
+
+    if (completedTasks.length > 0) {
+      html += '<div class="section-header completed-section">✓ Completed</div>';
+      completedTasks.forEach(task => {
+        html += renderTask(task);
+      });
+    }
+
+    container.innerHTML = html;
+  }
+
   // Silent background refresh (no loading screen)
   async function silentRefresh() {
     try {
@@ -962,6 +984,25 @@
       currentTaskListId = response.taskListId;
       const googleTasks = response.tasks || [];
       currentTasks = googleTasks.map(transformGoogleTask);
+
+      // Re-render tasks in correct sections (no loading screen)
+      renderTasksOnly();
+
+      // Update stats to match actual data
+      const stats = calculateStats(currentTasks);
+      const progressBar = document.querySelector('.progress-bar-fill');
+      if (progressBar) {
+        progressBar.style.width = `${stats.completionPercentage}%`;
+        progressBar.textContent = `${stats.completionPercentage}%`;
+      }
+
+      const statCards = document.querySelectorAll('.stat-number');
+      if (statCards.length >= 4) {
+        statCards[0].textContent = stats.completedTasks;
+        statCards[1].textContent = stats.incompleteTasks;
+        statCards[2].textContent = stats.overdueTasks;
+        statCards[3].textContent = stats.totalTasks;
+      }
 
       console.log('✅ Silent refresh complete');
 
