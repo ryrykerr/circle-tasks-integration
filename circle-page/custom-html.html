@@ -842,17 +842,25 @@
       taskCard.classList.remove('completed');
     }
 
+    // Update stats optimistically (instant feedback)
+    updateStatsOptimistically(taskId, !wasCompleted);
+
+    // Move task to correct section optimistically
+    setTimeout(() => {
+      moveTaskToCorrectSection(taskCard, !wasCompleted);
+    }, 300); // Small delay for smooth animation
+
     try {
-      // Toggle completion in background
-      await toggleTaskCompletion(taskId, currentlyCompleted);
+      // Toggle completion in background (no await, non-blocking)
+      toggleTaskCompletion(taskId, currentlyCompleted).then(() => {
+        // Silent background refresh (no loading screen)
+        silentRefresh();
+      });
 
       // Show celebration animation for ALL completions (not just the last one)
       if (!currentlyCompleted) {
         showCelebration();
       }
-
-      // Reload tasks to show updated state and refresh stats
-      await loadDashboard();
 
     } catch (error) {
       console.error('Error toggling task:', error);
@@ -868,8 +876,98 @@
         taskCard.classList.add('completed');
       }
 
+      // Revert stats
+      updateStatsOptimistically(taskId, wasCompleted);
+
       // Show error
       alert(`Failed to update task: ${error.message}`);
+    }
+  }
+
+  // Update progress stats optimistically without reload
+  function updateStatsOptimistically(taskId, isNowCompleted) {
+    // Find current task from our cached data
+    const task = currentTasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    // Update the task in our cache
+    task.isCompleted = isNowCompleted;
+
+    // Recalculate stats
+    const stats = calculateStats(currentTasks);
+
+    // Update progress bar
+    const progressBar = document.querySelector('.progress-bar-fill');
+    if (progressBar) {
+      progressBar.style.width = `${stats.completionPercentage}%`;
+      progressBar.textContent = `${stats.completionPercentage}%`;
+    }
+
+    // Update stat cards
+    const statCards = document.querySelectorAll('.stat-number');
+    if (statCards.length >= 4) {
+      statCards[0].textContent = stats.completedTasks;
+      statCards[1].textContent = stats.incompleteTasks;
+      statCards[2].textContent = stats.overdueTasks;
+      statCards[3].textContent = stats.totalTasks;
+    }
+  }
+
+  // Move task card to correct section (incomplete ↔ completed)
+  function moveTaskToCorrectSection(taskCard, isCompleted) {
+    const incompleteTasks = currentTasks.filter(t => !t.isCompleted);
+    const completedTasks = currentTasks.filter(t => t.isCompleted);
+
+    // Only re-render if we have both sections
+    if (incompleteTasks.length === 0 || completedTasks.length === 0) {
+      return; // One section is empty, don't move
+    }
+
+    // Find the correct container
+    const headers = document.querySelectorAll('.section-header');
+    let targetContainer;
+
+    headers.forEach(header => {
+      if (isCompleted && header.textContent.includes('Completed')) {
+        targetContainer = header.nextElementSibling;
+      } else if (!isCompleted && header.textContent.includes('Your Tasks')) {
+        targetContainer = header.nextElementSibling;
+      }
+    });
+
+    // If we can't find sections, skip (edge case)
+    if (!targetContainer) return;
+
+    // Fade out, then move
+    taskCard.style.opacity = '0';
+    setTimeout(() => {
+      taskCard.remove();
+    }, 200);
+  }
+
+  // Silent background refresh (no loading screen)
+  async function silentRefresh() {
+    try {
+      console.log('🔄 Silent refresh in background...');
+
+      // Fetch fresh data from API
+      const response = await fetchTasks(currentUser.email);
+
+      if (!response.success) {
+        console.warn('Silent refresh failed:', response.error);
+        return;
+      }
+
+      // Update cached data
+      currentTaskListId = response.taskListId;
+      const googleTasks = response.tasks || [];
+      currentTasks = googleTasks.map(transformGoogleTask);
+
+      console.log('✅ Silent refresh complete');
+
+    } catch (error) {
+      console.warn('Silent refresh error:', error);
+      // Don't show error to user - it's a background operation
     }
   }
 
