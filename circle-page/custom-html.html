@@ -705,6 +705,19 @@
     };
   }
 
+  // Sort tasks: no due date first, then by earliest due date
+  function sortTasksByDueDate(tasks) {
+    return tasks.sort((a, b) => {
+      // Tasks without due dates come first
+      if (!a.dueDate && !b.dueDate) return 0;
+      if (!a.dueDate) return -1;  // a has no date, comes first
+      if (!b.dueDate) return 1;   // b has no date, comes first
+
+      // Both have due dates - sort by earliest first
+      return new Date(a.dueDate) - new Date(b.dueDate);
+    });
+  }
+
   // ============================================
   // UI RENDERING
   // ============================================
@@ -948,8 +961,8 @@
     const container = document.querySelector('.tasks-container');
     if (!container) return;
 
-    const incompleteTasks = currentTasks.filter(t => !t.isCompleted);
-    const completedTasks = currentTasks.filter(t => t.isCompleted);
+    const incompleteTasks = sortTasksByDueDate(currentTasks.filter(t => !t.isCompleted));
+    const completedTasks = sortTasksByDueDate(currentTasks.filter(t => t.isCompleted));
 
     let html = '';
 
@@ -1142,8 +1155,8 @@
       let html = renderProgress(stats, currentUser.name);
 
       if (currentTasks.length > 0) {
-        const incompleteTasks = currentTasks.filter(t => !t.isCompleted);
-        const completedTasks = currentTasks.filter(t => t.isCompleted);
+        const incompleteTasks = sortTasksByDueDate(currentTasks.filter(t => !t.isCompleted));
+        const completedTasks = sortTasksByDueDate(currentTasks.filter(t => t.isCompleted));
 
         html += '<div class="tasks-container">';
 
