@@ -613,13 +613,16 @@
   // API CALLS TO GOOGLE CLOUD FUNCTIONS
   // ============================================
 
-  async function fetchTasks(userEmail) {
-    console.log('📡 Fetching tasks for:', userEmail);
+  async function fetchTasks(userEmail, userName) {
+    console.log('📡 Fetching tasks for:', userEmail, userName ? `(${userName})` : '');
 
     const response = await fetch(CONFIG.getTasks, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userEmail })
+      body: JSON.stringify({
+        userEmail,
+        userName  // Search for "Onboarding: {userName}" list
+      })
     });
 
     if (!response.ok) {
@@ -973,7 +976,7 @@
       console.log('🔄 Silent refresh in background...');
 
       // Fetch fresh data from API
-      const response = await fetchTasks(currentUser.email);
+      const response = await fetchTasks(currentUser.email, currentUser.name);
 
       if (!response.success) {
         console.warn('Silent refresh failed:', response.error);
@@ -1117,7 +1120,7 @@
       console.log('User detected:', currentUser.email);
 
       // Fetch tasks from Google Cloud Function
-      const response = await fetchTasks(currentUser.email);
+      const response = await fetchTasks(currentUser.email, currentUser.name);
 
       if (!response.success) {
         throw new Error(response.error || 'Failed to fetch tasks');

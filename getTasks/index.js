@@ -12,7 +12,8 @@ const CIRCLE_DOMAIN = process.env.CIRCLE_DOMAIN || 'https://citylifestyle.circle
  * Expected request body:
  * {
  *   "userEmail": "user@citylifestyle.com",
- *   "taskListId": "optional-task-list-id"
+ *   "userName": "John Smith",  // Optional - searches for "Onboarding: {userName}" list
+ *   "taskListId": "optional-task-list-id"  // Optional - specific list ID
  * }
  */
 functions.http('getTasks', async (req, res) => {
@@ -34,7 +35,7 @@ functions.http('getTasks', async (req, res) => {
       return;
     }
 
-    const { userEmail, taskListId } = req.body;
+    const { userEmail, taskListId, userName } = req.body;
 
     if (!userEmail) {
       res.status(400).json({ error: 'userEmail is required' });
@@ -59,11 +60,28 @@ functions.http('getTasks', async (req, res) => {
     const authClient = await auth.getClient();
     const tasks = google.tasks({ version: 'v1', auth: authClient });
 
-    // Get the task list ID (use default if not provided)
+    // Get the task list ID
     let listId = taskListId;
     if (!listId) {
       const taskLists = await tasks.tasklists.list();
-      listId = taskLists.data.items[0]?.id;
+      const allLists = taskLists.data.items || [];
+
+      // If userName provided, search for "Onboarding: {userName}" list
+      if (userName) {
+        const onboardingListName = `Onboarding: ${userName}`;
+        const onboardingList = allLists.find(list => list.title === onboardingListName);
+
+        if (onboardingList) {
+          console.log(`Found onboarding list: "${onboardingListName}"`);
+          listId = onboardingList.id;
+        } else {
+          console.log(`Onboarding list "${onboardingListName}" not found, using default`);
+          listId = allLists[0]?.id;
+        }
+      } else {
+        // No userName provided, use default first list
+        listId = allLists[0]?.id;
+      }
     }
 
     if (!listId) {
