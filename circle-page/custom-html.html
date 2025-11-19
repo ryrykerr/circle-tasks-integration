@@ -379,7 +379,7 @@
   .refresh-button {
     position: fixed;
     bottom: 30px;
-    right: 30px;
+    left: 30px;
     background: var(--primary-color);
     color: white;
     border: none;
@@ -534,7 +534,7 @@
       height: 56px;
       font-size: 24px;
       bottom: 20px;
-      right: 20px;
+      left: 20px;
     }
 
     .celebration {
@@ -827,28 +827,46 @@
 
     if (!checkbox) return;
 
-    // Show loading state
-    checkbox.classList.add('loading');
-    checkbox.innerHTML = '';
+    // Optimistic UI update - show change immediately
+    const wasCompleted = currentlyCompleted;
+
+    if (!wasCompleted) {
+      // Marking as complete
+      checkbox.classList.add('completed');
+      checkbox.innerHTML = '✓';
+      taskCard.classList.add('completed');
+    } else {
+      // Marking as incomplete
+      checkbox.classList.remove('completed');
+      checkbox.innerHTML = '';
+      taskCard.classList.remove('completed');
+    }
 
     try {
-      // Toggle completion
+      // Toggle completion in background
       await toggleTaskCompletion(taskId, currentlyCompleted);
 
-      // Show celebration if completing (not uncompleting)
+      // Show celebration animation for ALL completions (not just the last one)
       if (!currentlyCompleted) {
         showCelebration();
       }
 
-      // Reload tasks to show updated state
+      // Reload tasks to show updated state and refresh stats
       await loadDashboard();
 
     } catch (error) {
       console.error('Error toggling task:', error);
 
-      // Remove loading state
-      checkbox.classList.remove('loading');
-      checkbox.innerHTML = currentlyCompleted ? '✓' : '';
+      // Revert optimistic update on error
+      if (!wasCompleted) {
+        checkbox.classList.remove('completed');
+        checkbox.innerHTML = '';
+        taskCard.classList.remove('completed');
+      } else {
+        checkbox.classList.add('completed');
+        checkbox.innerHTML = '✓';
+        taskCard.classList.add('completed');
+      }
 
       // Show error
       alert(`Failed to update task: ${error.message}`);
